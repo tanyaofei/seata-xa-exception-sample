@@ -4,13 +4,6 @@ spring:
     username: root
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
-    type: com.alibaba.druid.pool.DruidDataSource
-    druid:
-      test-while-idle: true
-      test-on-borrow: false
-      test-on-return: false
-      pool-prepared-statements: false
-      validation-query: select 'x'
 
   application:
     name: seata-xa-exception-sample
@@ -27,6 +20,3 @@ seata:
   registry:
     type: file
 
-mybatis-plus:
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
