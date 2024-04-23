@@ -206,7 +206,13 @@ public class ConnectionProxyXA extends AbstractConnectionProxyXA implements Hold
         }
         try {
             // XA End: Success
-            end(XAResource.TMSUCCESS);
+            try {
+                end(XAResource.TMSUCCESS);
+            } catch (SQLException sqle) {
+                // Rollback immediately before the XA Branch Context was deleted.
+                rollback(false);
+                throw new SQLException(sqle.getMessage(), SQLSTATE_XA_NOT_END, sqle);
+            }
             long now = System.currentTimeMillis();
             checkTimeout(now);
             setPrepareTime(now);
@@ -215,7 +221,7 @@ public class ConnectionProxyXA extends AbstractConnectionProxyXA implements Hold
             // Branch Report to TC: Failed
             reportStatusToTC(BranchStatus.PhaseOne_Failed);
             throw new SQLException(
-                "Failed to end(TMSUCCESS)/prepare xa branch on " + xid + "-" + xaBranchXid.getBranchId() + " since " + xe
+                "Failed to end(TMSUCCESS)/prepare/rollback(TMFAIL) xa branch on " + xid + "-" + xaBranchXid.getBranchId() + " since " + xe
                     .getMessage(), xe);
         } finally {
             cleanXABranchContext();
@@ -224,6 +230,11 @@ public class ConnectionProxyXA extends AbstractConnectionProxyXA implements Hold
 
     @Override
     public void rollback() throws SQLException {
+        // XA End & XA Rollback
+        rollback(true);
+    }
+
+    public void rollback(boolean end) throws SQLException {
         if (currentAutoCommitStatus) {
             // Ignore the committing on an autocommit session.
             return;
@@ -233,8 +244,10 @@ public class ConnectionProxyXA extends AbstractConnectionProxyXA implements Hold
         }
         try {
             if (!rollBacked) {
-                // XA End: Fail
-                xaResource.end(this.xaBranchXid, XAResource.TMFAIL);
+                if (end) {
+                    // XA End: Fail
+                    xaResource.end(this.xaBranchXid, XAResource.TMFAIL);
+                }
                 xaRollback(xaBranchXid);
             }
             // Branch Report to TC
