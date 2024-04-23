@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/seata
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: false
+      validation-query: select 'x'
+
+  application:
+    name: seata-xa-exception-sample
+
+  main:
+    web-application-type: servlet
+
+seata:
+  tx-service-group: mygroup
+  enable-auto-data-source-proxy: true
+  data-source-proxy-mode: XA
+  config:
+    type: file
+  registry:
+    type: file
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
